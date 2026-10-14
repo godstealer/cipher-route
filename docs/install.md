@@ -40,4 +40,4 @@ Native packages 工作流提供四平台构建，固定 HTTP Capture commit，�
 
 ## 安装网页
 
-`site/` 是无构建依赖的 GitHub Pages 页面。部署时将 site 目录作为 Pages 静态产物上传。当前未部署，扩展安装按钮的目标为 https://godstealer.github.io/cipher-route/ 。页面仅链接 GitHub Releases 中实际存在的资产，没有包时明确显示尚未发布。基础包不含内核；完整包包含 extension 子目录。浏览器仅下载，不能自动执行本机安装程序或授予 CA 信任。
+`site/` 是无构建依赖的 GitHub Pages 页面。部署时将 site 目录作为 Pages 静态产物上传。main 分支的 site 变更通过 Deploy installation page 工作流自动部署，扩展安装按钮的目标为 https://godstealer.github.io/cipher-route/ 。页面仅链接 GitHub Releases 中实际存在的资产，没有包时明确显示尚未发布。基础包不含内核；完整包包含 extension 子目录。浏览器仅下载，不能自动执行本机安装程序或授予 CA 信任。
