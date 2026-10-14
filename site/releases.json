@@ -1,0 +1,60 @@
+[
+  {
+    "tag_name": "v0.1.0-preview.2",
+    "assets": [
+      {
+        "name": "cipher-route-extension-0.1.0-preview.2.zip",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-extension-0.1.0-preview.2.zip"
+      },
+      {
+        "name": "cipher-route-extension-0.1.0-preview.2.zip.sha256",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-extension-0.1.0-preview.2.zip.sha256"
+      },
+      {
+        "name": "cipher-route-linux-x64.tar.gz",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-linux-x64.tar.gz"
+      },
+      {
+        "name": "cipher-route-linux-x64.tar.gz.sha256",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-linux-x64.tar.gz.sha256"
+      },
+      {
+        "name": "cipher-route-macos-arm64.tar.gz",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-macos-arm64.tar.gz"
+      },
+      {
+        "name": "cipher-route-macos-arm64.tar.gz.sha256",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-macos-arm64.tar.gz.sha256"
+      },
+      {
+        "name": "cipher-route-macos-x64.tar.gz",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-macos-x64.tar.gz"
+      },
+      {
+        "name": "cipher-route-macos-x64.tar.gz.sha256",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-macos-x64.tar.gz.sha256"
+      },
+      {
+        "name": "cipher-route-windows-x64.zip",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-windows-x64.zip"
+      },
+      {
+        "name": "cipher-route-windows-x64.zip.sha256",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.2/cipher-route-windows-x64.zip.sha256"
+      }
+    ]
+  },
+  {
+    "tag_name": "v0.1.0-preview.1",
+    "assets": [
+      {
+        "name": "cipher-route-0.1.0.zip",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.1/cipher-route-0.1.0.zip"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "browser_download_url": "https://github.com/godstealer/cipher-route/releases/download/v0.1.0-preview.1/SHA256SUMS.txt"
+      }
+    ]
+  }
+]
