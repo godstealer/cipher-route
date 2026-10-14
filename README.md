@@ -28,9 +28,9 @@ npm run build
 
 ## 明确未完成
 
-TLS 自定义转发尚未接通。打开“自定义 TLS”的情景目前**拒绝启用**，不会把保存配置误报为 TLS 已生效。
+本地开发版已接入 Chrome/Firefox TLS 转发，需另装 Native Host 和信任专用 CA，见 [本地内核安装说明](docs/native-host.md)。GitHub Preview 1 发布包仍不包含该能力。Hex 模板和协议强制覆盖尚不支持。
 
-后续：本地 host、受限授权、CA 信任引导、按情景路由到 HTTP Capture 的发送引擎、连接池隔离、WS/SSE/gRPC 兼容验证。Firefox、代理认证、规则订阅、配置导入导出暂未支持。
+后续：跨平台 host 安装与发布、CA 信任引导、WS/SSE/gRPC 兼容验证。Firefox、代理认证、规则订阅、配置导入导出暂未支持。
 
 HTTPS 类型指连接代理本身使用 TLS，不表示修改目标站点的 ClientHello。SOCKS5 认证不能直接通过当前浏览器配置实现。
 
@@ -87,3 +87,9 @@ npm run test:live
 后续计划复用 HTTP Capture 发送引擎，但目前没有可安装的 CipherRoute Native Messaging host，也没有捆绑 CA。不要把“配置可保存”理解为握手已改变。如果使用的外部代理本身解密 HTTPS，它可能有自己的 CA 要求，那是该代理的行为。
 
 本次发布是开发预览：核心测试和 curl 网络测试已通过，真实浏览器扩展出口验收仍待完成。ZIP 是已解压扩展包，不是应用商店签名的 CRX，也不是桌面安装程序。
+
+开发版最新状态及安装以 [本地内核说明](docs/native-host.md) 为准；上面的 Preview 1 ZIP 说明描述已发布版本。
+
+## 三端内核安装
+
+Windows x64、macOS Intel/Apple Silicon、Linux x64 的安装及构建见 [三端安装指南](docs/install.md)。已添加四平台只读 CI 打包工作流，尚未生成和实机验证 macOS/Linux 安装包。

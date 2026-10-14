@@ -1,5 +1,16 @@
+import {createHash,createPublicKey} from 'node:crypto';
 import {cp,mkdir,readFile} from 'node:fs/promises';
 const manifest=JSON.parse(await readFile('extension/manifest.json','utf8'));
 if(manifest.manifest_version!==3)throw Error('Manifest V3 required');
+const key=Buffer.from(manifest.key??'','base64');
+createPublicKey({key,format:'der',type:'spki'});
+const id=[...createHash('sha256').update(key).digest('hex').slice(0,32)].map(c=>String.fromCharCode(97+parseInt(c,16))).join('');
+const installer=await readFile('native/install-windows.ps1','utf8');
+if(!installer.includes("$ExtensionId='"+id+"'"))throw Error('Native host extension ID differs from manifest key');
+const identity=JSON.parse(await readFile('native/extension-identity.json','utf8'));
+if(identity.id!==id)throw Error('Native identity differs from manifest key');
+const nativeInstaller=await readFile('native/src/install.rs','utf8');
+if(!nativeInstaller.includes(JSON.stringify(id)))throw Error('Unix installer identity differs from manifest key');
+console.log('Fixed extension ID: '+id);
 await mkdir('dist',{recursive:true});await cp('extension','dist/extension',{recursive:true});
 console.log('Load unpacked extension: '+new URL('../dist/extension',import.meta.url).pathname);

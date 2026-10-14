@@ -1,14 +1,17 @@
-export const tlsEnabled=p=>p.tls?.enabled??(!!p.tls&&p.tls.preset!=='browser');
+export const tlsEnabled=p=>!!p.tls&&p.tls.preset!=='browser'&&(p.tls.enabled??true);
 export const initialConfig = () => validateConfig({version:1, profiles:[{id:'local',name:'HTTP Capture',scheme:'http',host:'127.0.0.1',port:8080,domains:[],tls:{enabled:false,preset:'chrome',version:'auto'}}]});
 export function validateProfile(p) {
   if (!p || typeof p.id!=='string' || ['direct','system','release'].includes(p.id) || !/^[a-zA-Z0-9_-]{1,80}$/.test(p.id)) throw Error('情景 ID 无效');
   if (typeof p.name!=='string'||!p.name.trim()||p.name.length>80) throw Error('请输入情景名称（最多 80 字）');
   if (!['http','https','socks5'].includes(p.scheme)) throw Error('不支持的代理类型');
   if (typeof p.host!=='string'||!/^([a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?|\[[0-9a-fA-F:]+\])$/.test(p.host)) throw Error('代理地址只填写主机名或 IP，不包含协议、路径和凭据');
+  if(p.bypassList!==undefined&&(!Array.isArray(p.bypassList)||p.bypassList.length>500||p.bypassList.some(v=>typeof v!=='string'||v.length>253||! /^[a-zA-Z0-9.*:< >\[\]_-]+$/.test(v))))throw Error('绕过列表无效');
   if (!Number.isInteger(p.port)||p.port<1||p.port>65535) throw Error('端口必须在 1–65535 之间');
   if (!Array.isArray(p.domains)||p.domains.length>500||p.domains.some(d=>typeof d!=='string'||d.length>253||! /^(\*\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(d)||d.includes('..'))) throw Error('域名规则使用 example.com 或 *.example.com，每行一项');
   if(p.tls?.enabled!==undefined&&typeof p.tls.enabled!=='boolean')throw Error('TLS 开关必须是布尔值');
   if (!p.tls||!['browser','chrome','firefox','custom'].includes(p.tls.preset)) throw Error('TLS 预设无效');
+  if(tlsEnabled(p)&&p.tls.protocol!==undefined&&!['auto','h1','h2'].includes(p.tls.protocol))throw Error('HTTP 协议选择 auto、h1 或 h2');
+  if(tlsEnabled(p)&&p.tls.tlsVersion!==undefined&&!['auto','1.2','1.3'].includes(p.tls.tlsVersion))throw Error('TLS 协议版本无效');
   if (tlsEnabled(p)&&!['auto','latest'].includes(p.tls.version)&&!/^\d{2,3}$/.test(p.tls.version)) throw Error('TLS 浏览器版本填写 auto、latest 或版本号');
   if(tlsEnabled(p)&&p.tls.preset==='custom'&&(!/^(?:[0-9a-fA-F]{2})+$/.test(p.tls.helloHex??'')||(p.tls.helloHex.length>131072)))throw Error('请输入有效的 ClientHello Hex（最多 64 KiB）');
   return p;
@@ -40,7 +43,8 @@ export function validateConfig(input) {
 export function proxyValue(profile) {
   const p=validateProfile(profile);
   if(tlsEnabled(p))throw Error('TLS 转发内核尚未接入：此配置可以保存，但暂不能启用。');
-  if(!p.domains.length)return {mode:'fixed_servers',rules:{singleProxy:{scheme:p.scheme,host:p.host,port:p.port},bypassList:['<local>','127.0.0.1','[::1]']}};
+  if(!p.domains.length)return {mode:'fixed_servers',rules:{singleProxy:{scheme:p.scheme,host:p.host,port:p.port},bypassList:p.bypassList??['<local>','127.0.0.1','[::1]']}};
+  if(p.bypassList!==undefined)throw Error('带导入绕过列表的代理暂不支持域名分流，请保持模式域名为空');
   const target=({http:'PROXY',https:'HTTPS',socks5:'SOCKS5'})[p.scheme]+' '+p.host+':'+p.port;
   const data=`function FindProxyForURL(url,host){host=host.toLowerCase();if(host==='localhost'||host==='127.0.0.1'||host==='::1'||host==='[::1]'||host.indexOf('.')<0)return 'DIRECT';var rules=${JSON.stringify(p.domains)};for(var i=0;i<rules.length;i++){var r=rules[i];if(r.slice(0,2)==='*.'){var suffix=r.slice(1);if(host.length>suffix.length&&host.slice(-suffix.length)===suffix)return ${JSON.stringify(target)};}else if(host===r)return ${JSON.stringify(target)};}return 'DIRECT';}`;
   return {mode:'pac_script',pacScript:{data,mandatory:true}};

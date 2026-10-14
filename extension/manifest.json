@@ -17,5 +17,6 @@
     "default_title": "CipherRoute"
   },
   "options_page": "options.html",
-  "minimum_chrome_version": "109"
+  "minimum_chrome_version": "109",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiFpMmEVJ8ZJFDkOcKuTcfSpr0nd1J8YnwxB50q5jcskiGhBzfwB/X0xey8ZJt7QyBgRm7zu6Xqg/AxSfeu9+6VEqQh2dGrVC2lb9y59BwqUtm5OU5yKmF9Lz5rWGA4rmNw37N451YHp5JiNxvIOE8oWmr4mRW60BL56oSDFTKOEH2mmN5Bx2dEwG9vl10HP6OqTSyAKmGKI001MtQ0pkIqluJVjIHn3YmzBKBWibEOmho2/TrqZO2zKmRVhGhqwpmMN2h2Rg8VRStuQdnDEnWsZG2YacmyE0FNJoVtjFpPp0sPoldyysr0iJD6Pyu68cGuUThLMo7/lDz3Xu5k49qwIDAQAB"
 }
