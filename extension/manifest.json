@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "CipherRoute",
+  "version": "0.1.0",
+  "description": "代理情景切换与 TLS 配置。自定义 TLS 需要本地内核。",
+  "permissions": [
+    "proxy",
+    "storage",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CipherRoute"
+  },
+  "options_page": "options.html",
+  "minimum_chrome_version": "109"
+}

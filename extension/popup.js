@@ -1,0 +1,4 @@
+import {tlsEnabled} from './core.js';
+import {$,request,busy,report} from './ui.js';import {activeLabel} from './controller.js';
+function render(s){$('active').textContent=activeLabel(s);$('profiles').replaceChildren();for(const p of s.config.profiles){const b=document.createElement('button');b.className='profile';b.textContent=p.name+' · '+(!tlsEnabled(p)?p.scheme.toUpperCase()+' · 普通代理':'自定义 TLS · '+p.tls.preset);b.onclick=()=>busy(async()=>render(await request({type:'apply',action:p.id})));$('profiles').append(b)}if(s.proxyError)$('error').textContent=s.proxyError}
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>busy(async()=>render(await request({type:'apply',action:b.dataset.action}))));$('manage').onclick=()=>chrome.runtime.openOptionsPage();request({type:'snapshot'}).then(render).catch(report);
