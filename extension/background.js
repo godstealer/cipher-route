@@ -1,3 +1,4 @@
+import {trustedMessageSource} from './message-source.js';
 import {nativeClient} from './native-client.js';
 const native=nativeClient(chrome.runtime);
 import {createController} from './controller.js';
@@ -6,7 +7,7 @@ for(const method of ['get','set','clear'])settings[method]=details=>new Promise(
 const controller=createController({storage:chrome.storage,proxy:{settings},native});
 let queue=Promise.resolve();
 chrome.runtime.onMessage.addListener((message,sender,reply)=>{
- if(sender.id!==chrome.runtime.id||sender.tab||!sender.url?.startsWith(chrome.runtime.getURL('')))return false;
+ if(!trustedMessageSource(sender,chrome.runtime))return false;
  const task=async()=>{
   if(message?.type==='snapshot')return controller.snapshot();
   if(message?.type==='apply')return controller.apply(message.action);

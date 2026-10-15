@@ -32,5 +32,18 @@ export function activeLabel(state){
  if(!state.applied||!sameProxy(state.applied.value,state.effective.value))return '代理设置已变化，请重新应用';
  const a=state.applied;if(a.action==='direct')return '直连';if(a.action==='system')return '跟随系统';
  const current=state.config.profiles.find(p=>p.id===a.action);
- return (a.profile?.name??a.action)+(JSON.stringify(current)!==JSON.stringify(a.profile)?' · 配置已变更，需重新应用':'');
+ return (a.profile?.name??a.action)+(!sameProxy(current,a.profile)?' · 配置已变更，需重新应用':'');
+}
+
+export function pendingApplyAction(state){
+ const a=state.applied;
+ if(!a||!['controlled_by_this_extension','controllable_by_this_extension'].includes(state.effective.levelOfControl))return null;
+ const current=state.config.profiles.find(p=>p.id===a.action);
+ if(!current)return null;
+ return !sameProxy(current,a.profile)||!sameProxy(a.value,state.effective.value)||state.effective.levelOfControl!=='controlled_by_this_extension'?a.action:null;
+}
+
+export function activeAction(state){
+ if(state.effective.levelOfControl!=='controlled_by_this_extension'||!state.applied||!sameProxy(state.applied.value,state.effective.value))return null;
+ return state.applied.action;
 }

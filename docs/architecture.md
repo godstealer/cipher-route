@@ -54,3 +54,13 @@ TLS 编辑器区分浏览器主版本和 TLS 协议版本。支持保存跟随 U
 已核查 HTTP Capture 的 crates/transport-api、browser-profiles 和 transport-httpcloak：有 TlsProfile、浏览器版本目录和发送引擎能力接口。下一步仍需实现受扩展 ID 限制的 Native Messaging host、模式与代理实例映射、CA 信任流程、失败回滚和真实浏览器握手验收。未将这些能力标为完成。
 
 自动化测试：21 项通过；新增原生 TLS 资源可启用和协议字段保存/校验测试。界面新增字段尚未进行真实浏览器交互验收。
+
+## Auto 场景
+
+组合模式可选择 Auto 类型，按顺序匹配精确域名或 `*.example.com` 子域名规则，首条命中生效；每条规则及未匹配默认目标可选择代理或直连。Auto 固定浏览器原生 TLS，不启动 Native Host。规则拥有独立路由语义，不套用固定代理的 bypassList；本机地址始终直连。规则顺序可调整。缺失代理引用及自定义 TLS 引用会被拒绝。当前不支持正则、远程规则订阅、ZeroOmega SwitchProfile 自动转换。
+
+验证：PAC 实际执行测试覆盖优先级、后缀边界、默认代理/直连；预览页实际完成 Auto 创建、保存、刷新读取。尚未在真实扩展环境验证网络路由。
+
+## 0.1.1 Preview 1 修复
+
+配置标签页消息校验允许本扩展 options.html 和 popup.html，拒绝外部网页。ZeroOmega 导入使用页面内预览与确认按钮；可导入 FixedProfile，SwitchProfile 仍未转换。快捷面板按实际生效状态高亮，配置变化提供“应用当前修改”；属性键顺序不再触发误报。自动化测试 30 项通过，网页预览验证导入、保存、Auto 和选中高亮；受工具协议限制，真实扩展端到端验收尚未完成。此版本仅更新扩展，四平台完整包复用 Preview 2 已验证的原生二进制，并在 BUILD.json 中记录来源。

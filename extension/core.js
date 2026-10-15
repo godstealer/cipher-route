@@ -1,3 +1,4 @@
+import {resolveAuto,autoProxyValue} from './auto.js';
 export const tlsEnabled=p=>!!p.tls&&p.tls.preset!=='browser'&&(p.tls.enabled??true);
 export const initialConfig = () => validateConfig({version:1, profiles:[{id:'local',name:'HTTP Capture',scheme:'http',host:'127.0.0.1',port:8080,domains:[],tls:{enabled:false,preset:'chrome',version:'auto'}}]});
 export function validateProfile(p) {
@@ -35,12 +36,15 @@ export function validateConfig(input) {
  for(const p of c.proxies)validateProfile({...p,domains:[],tls:off});
  for(const t of c.tlsProfiles)validateProfile({id:t.id,name:t.name,scheme:'http',host:'localhost',port:8080,domains:[],tls:{...t,enabled:t.enabled!==false}});
  c.profiles=c.modes.map(m=>{
+  if(m.type==='auto')return resolveAuto(m,c.proxies);
+  if(m.type!==undefined&&m.type!=='fixed')throw Error('模式类型无效');
   const p=c.proxies.find(p=>p.id===m.proxyId);if(!p)throw Error('模式引用的代理配置不存在');
   const t=m.tlsId==null?null:c.tlsProfiles.find(t=>t.id===m.tlsId);if(m.tlsId!=null&&!t)throw Error('模式引用的 TLS 配置不存在');
   return validateProfile({...p,id:m.id,name:m.name,domains:m.domains,tls:t?{...t,enabled:true}:off});
  });return c;
 }
 export function proxyValue(profile) {
+  if(profile.type==='auto')return autoProxyValue(profile);
   const p=validateProfile(profile);
   if(tlsEnabled(p))throw Error('TLS 转发内核尚未接入：此配置可以保存，但暂不能启用。');
   if(!p.domains.length)return {mode:'fixed_servers',rules:{singleProxy:{scheme:p.scheme,host:p.host,port:p.port},bypassList:p.bypassList??['<local>','127.0.0.1','[::1]']}};
@@ -49,5 +53,8 @@ export function proxyValue(profile) {
   const data=`function FindProxyForURL(url,host){host=host.toLowerCase();if(host==='localhost'||host==='127.0.0.1'||host==='::1'||host==='[::1]'||host.indexOf('.')<0)return 'DIRECT';var rules=${JSON.stringify(p.domains)};for(var i=0;i<rules.length;i++){var r=rules[i];if(r.slice(0,2)==='*.'){var suffix=r.slice(1);if(host.length>suffix.length&&host.slice(-suffix.length)===suffix)return ${JSON.stringify(target)};}else if(host===r)return ${JSON.stringify(target)};}return 'DIRECT';}`;
   return {mode:'pac_script',pacScript:{data,mandatory:true}};
 }
-export function sameProxy(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+export function sameProxy(a,b){
+ const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>[k,canonical(v[k])])):v;
+ return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
+}
 

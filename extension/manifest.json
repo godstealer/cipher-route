@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CipherRoute",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "代理情景切换与 TLS 配置。自定义 TLS 需要本地内核。",
   "permissions": [
     "proxy",
@@ -18,5 +18,6 @@
   },
   "options_page": "options.html",
   "minimum_chrome_version": "109",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiFpMmEVJ8ZJFDkOcKuTcfSpr0nd1J8YnwxB50q5jcskiGhBzfwB/X0xey8ZJt7QyBgRm7zu6Xqg/AxSfeu9+6VEqQh2dGrVC2lb9y59BwqUtm5OU5yKmF9Lz5rWGA4rmNw37N451YHp5JiNxvIOE8oWmr4mRW60BL56oSDFTKOEH2mmN5Bx2dEwG9vl10HP6OqTSyAKmGKI001MtQ0pkIqluJVjIHn3YmzBKBWibEOmho2/TrqZO2zKmRVhGhqwpmMN2h2Rg8VRStuQdnDEnWsZG2YacmyE0FNJoVtjFpPp0sPoldyysr0iJD6Pyu68cGuUThLMo7/lDz3Xu5k49qwIDAQAB"
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiFpMmEVJ8ZJFDkOcKuTcfSpr0nd1J8YnwxB50q5jcskiGhBzfwB/X0xey8ZJt7QyBgRm7zu6Xqg/AxSfeu9+6VEqQh2dGrVC2lb9y59BwqUtm5OU5yKmF9Lz5rWGA4rmNw37N451YHp5JiNxvIOE8oWmr4mRW60BL56oSDFTKOEH2mmN5Bx2dEwG9vl10HP6OqTSyAKmGKI001MtQ0pkIqluJVjIHn3YmzBKBWibEOmho2/TrqZO2zKmRVhGhqwpmMN2h2Rg8VRStuQdnDEnWsZG2YacmyE0FNJoVtjFpPp0sPoldyysr0iJD6Pyu68cGuUThLMo7/lDz3Xu5k49qwIDAQAB",
+  "version_name": "0.1.1 Preview 1"
 }

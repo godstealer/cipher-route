@@ -86,3 +86,76 @@ test('fixed extension identity agrees with native installer',()=>{
  assert.equal(id,'kejpkbdliekmgpagfceglikahmchoabg');
  const installer=readFileSync(new URL('../native/install-windows.ps1',import.meta.url),'utf8');assert.ok(installer.includes("$ExtensionId='"+id+"'"));assert.ok(!installer.includes('[string]$ExtensionId'));
 });
+
+// Regression: options pages opened as tabs must be able to read/save configuration.
+const {trustedMessageSource}=await import('../extension/message-source.js');
+test('options tab is trusted, content scripts and foreign pages are rejected',()=>{
+ const id='kejpkbdliekmgpagfceglikahmchoabg';
+ const runtime={id,getURL:p=>`chrome-extension://${id}/${p}`};
+ assert.equal(trustedMessageSource({id,url:runtime.getURL('options.html'),tab:{id:7}},runtime),true);
+ assert.equal(trustedMessageSource({id,url:runtime.getURL('options.html')+'?section=proxy#edit',tab:{id:7}},runtime),true);
+ assert.equal(trustedMessageSource({id,url:runtime.getURL('popup.html')},runtime),true);
+ for(const sender of [{id,url:'https://example.com',tab:{id:7}},{id:'other',url:runtime.getURL('options.html')},{id,url:runtime.getURL('other.html')},{id},{id,url:'invalid'}]) assert.equal(trustedMessageSource(sender,runtime),false);
+});
+
+test('background accepts options-tab create, edit, reload and delete requests',async()=>{
+ const prior=globalThis.chrome;let listener;const data={};
+ const id='kejpkbdliekmgpagfceglikahmchoabg';
+ globalThis.chrome={runtime:{id,getURL:p=>`chrome-extension://${id}/${p}`,onMessage:{addListener:fn=>listener=fn}},
+ storage:{local:{get:async keys=>Object.fromEntries(keys.filter(k=>k in data).map(k=>[k,structuredClone(data[k])])),set:async values=>Object.assign(data,structuredClone(values))}},
+ proxy:{settings:{get:(_d,cb)=>cb({levelOfControl:'controllable_by_this_extension',value:{mode:'system'}}),onChange:{addListener(){}}},onProxyError:{addListener(){}}},action:{setBadgeText:async()=>{}}};
+ try{
+  await import('../extension/background.js?options-tab-test');
+  const sender={id,url:chrome.runtime.getURL('options.html'),tab:{id:8}};
+  const call=message=>new Promise((resolve,reject)=>{const accepted=listener(message,sender,r=>r.ok?resolve(r.value):reject(Error(r.error)));if(!accepted)reject(Error('Options message rejected'));});
+  let s=await call({type:'snapshot'});
+  s.config.proxies.push({id:'test-proxy',name:'Test proxy',scheme:'http',host:'127.0.0.1',port:9000});
+  s.config.modes.push({id:'test-mode',name:'Test mode',proxyId:'test-proxy',tlsId:null,domains:[]});
+  s=await call({type:'save',config:s.config});assert.equal(s.config.modes.at(-1).name,'Test mode');
+  s.config.modes.at(-1).name='Edited mode';await call({type:'save',config:s.config});
+  s=await call({type:'snapshot'});assert.equal(s.config.modes.at(-1).name,'Edited mode');
+  s.config.modes=s.config.modes.filter(p=>p.id!=='test-mode');s.config.proxies=s.config.proxies.filter(p=>p.id!=='test-proxy');
+  await call({type:'save',config:s.config});s=await call({type:'snapshot'});assert.equal(s.config.modes.some(p=>p.id==='test-mode'),false);
+ }finally{globalThis.chrome=prior;}
+});
+
+test('Auto ordered routing, default, domain boundaries and no native TLS',async()=>{
+ const cfg=initialConfig();cfg.proxies.push({id:'second',name:'Second',scheme:'socks5',host:'127.0.0.1',port:9000});
+ cfg.modes.push({id:'auto-test',name:'Auto',type:'auto',tlsId:null,defaultProxyId:'second',rules:[{domain:'private.example.com',proxyId:null},{domain:'*.example.com',proxyId:'local'},{domain:'example.com',proxyId:'second'}]});
+ const m=mock();m.api.native={call:async()=>{throw Error('Native must not be started')}};const c=createController(m.api);await c.save(cfg);const applied=await c.apply('auto-test');
+ const ctx={};vm.createContext(ctx);vm.runInContext(applied.effective.value.pacScript.data,ctx);const route=h=>ctx.FindProxyForURL('https://'+h,h);
+ assert.equal(route('private.example.com'),'DIRECT');assert.equal(route('A.EXAMPLE.COM'),'PROXY 127.0.0.1:8080');assert.equal(route('example.com'),'SOCKS5 127.0.0.1:9000');assert.equal(route('example.com.evil'),'SOCKS5 127.0.0.1:9000');assert.equal(route('localhost'),'DIRECT');
+ assert.equal(applied.config.profiles.at(-1).tls.enabled,false);
+ cfg.proxies[0].port=8888;assert.match(activeLabel(await c.save(cfg)),/需重新应用/);
+ cfg.modes.at(-1).defaultProxyId=null;const direct=proxyValue(validateConfig(cfg).profiles.at(-1));vm.runInContext(direct.pacScript.data,ctx);assert.equal(route('other.test'),'DIRECT');
+});
+test('Auto rejects TLS, dangling proxy references and invalid rules',()=>{
+ const cfg=initialConfig();const mode={id:'auto-test',name:'Auto',type:'auto',tlsId:null,defaultProxyId:null,rules:[]};cfg.modes.push(mode);
+ assert.equal(proxyValue(validateConfig(cfg).profiles.at(-1)).mode,'pac_script');
+ mode.tlsId='local';assert.throws(()=>validateConfig(cfg),/不能设置/);mode.tlsId=null;
+ mode.rules=[{domain:'a.com',proxyId:'missing'}];assert.throws(()=>validateConfig(cfg),/不存在/);
+ mode.rules=[{domain:'https://a.com',proxyId:null}];assert.throws(()=>validateConfig(cfg),/域名规则/);
+ mode.rules=[];mode.defaultProxyId='missing';assert.throws(()=>validateConfig(cfg),/不存在/);
+});
+
+test('storage property order does not report pending edits; real edits can reapply',async()=>{
+ const {pendingApplyAction}=await import('../extension/controller.js');
+ const m=mock(),c=createController(m.api);let s=await c.apply('local');
+ const reorder=v=>Array.isArray(v)?v.map(reorder):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,v])=>[k,reorder(v)])):v;
+ s.applied=reorder(s.applied);s.effective=reorder(s.effective);
+ assert.equal(activeLabel(s),'HTTP Capture');assert.equal(pendingApplyAction(s),null);
+ s.config.proxies[0].port=9001;s=await c.save(s.config);
+ assert.equal(pendingApplyAction(s),'local');s=await c.apply(pendingApplyAction(s));
+ assert.equal(s.effective.value.rules.singleProxy.port,9001);assert.equal(pendingApplyAction(s),null);
+ s.effective.levelOfControl='controlled_by_other_extensions';assert.equal(pendingApplyAction(s),null);
+});
+
+test('popup selection tracks effective action, not unsaved edits or failed switches',async()=>{
+ const {activeAction}=await import('../extension/controller.js');const m=mock(),c=createController(m.api);
+ assert.equal(activeAction(await c.snapshot()),null);
+ assert.equal(activeAction(await c.apply('direct')),'direct');assert.equal(activeAction(await c.apply('system')),'system');
+ let s=await c.apply('local');assert.equal(activeAction(s),'local');s.config.proxies[0].port=9002;s=await c.save(s.config);assert.equal(activeAction(s),'local');
+ await assert.rejects(c.apply('missing'));assert.equal(activeAction(await c.snapshot()),'local');
+ s.effective={levelOfControl:'controlled_by_this_extension',value:{mode:'direct'}};assert.equal(activeAction(s),null);
+ assert.equal(activeAction(await c.apply('release')),null);
+});
